@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Flip It!</title>
+    <link rel="shortcut icon" href="./imgs/eth.ico" />
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+      integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+      crossorigin="anonymous"></script>
+    <script type="text/javascript" src="./contracts/abi.js"></script>
+    <script type="text/javascript" src="./scripts/web3.min.js"></script>
+    <script type="text/javascript" src="./scripts/flipit_service.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous" />
+    <link rel="stylesheet" href="./styles/app.css"/>
+  </head>
+  <body>
+    <!-- Start page header -->
+    <div class="jumbotron jumbotron-fluid">
+      <div class="container">
+        <h1 class="display-4 wager-cntl-center-contents">FlipIt </h1>
+        <div class="row">
+          <div class="col-sm-5">
+            <label>Wagers Made:</label>
+            <span id="wagersMadeVal"></span>
+          </div>
+
+          <div class="col-sm-5">
+            <label>Wagers Won:</label>
+            <span id="wagersWonVal"></span>
+          </div>
+        </div>
+        <div class="row" id="totalWagerAmtRow">
+          <h3>
+            TOTAL WAGERS PAID:
+            <span id="totalWagerAmt"></span>
+            (ETH)!
+          </h3>
+        </div>
+        <div class="row">
+          <h3>
+            TOTAL WINNINGS PAID:
+            <span id="payoutVal"></span>
+            (ETH)!
+          </h3>
+        </div>
+        <div class="row">
+          <h2>
+            WIN:
+            <span id="multiplierVal"></span>
+            your wager!
+          </h2>
+        </div>
+      </div>
+    </div>
+    <!-- End page header -->
+
+    <!-- Start Player section -->
+    <div class="container-fluid" id="playerContent">
+      <div class="row">
+        <div class="col-sm-12 wager-cntl-center-contents">
+
+<!--
+<img src="./imgs/eth_coin_a.png" width="128" height="128"></img>
+-->
+          <div class="flip-card">
+            <div id="theCoin" class="flip-card-inner">
+          		<div id="coinFront" class="flip-card-front">
+          			<img src="./imgs/eth_coin_a.png" width="128" height="128"></img>
+          		</div>
+          		<div id="coinBack" class="flip-card-back flipped">
+          			<img src="./imgs/eth_coin_b.png" width="128" height="128"></img>
+          		</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row wager">
+        <div class="com-xs-0 col-sm-2"></div>
+        <div class="col-xs-5 col-sm-3 wager-cntl-center-contents">
+          <label>Wager</label>
+
+          <select id="tossCall"
+            class="selectpicker wager-cntl wager-choice">
+            <option value=0>Heads</option>
+            <option value=1>Tails</option>
+          </select>
+        </div>
+
+        <div class="col-sm-1 col-md-2 wager-cntl-center-contents">
+          <label>for</label>
+        </div>
+
+        <div class="col-sm-5 col-md-3 wager-cntl-center-contents">
+          <input type="text"
+            id="wager"
+            class="wager-cntl wager-amt"
+            placeholder="wager"
+            value="1" />
+
+          <select id="wagerDenomination"
+            class="selectpicker wager-cntl wager-dem"
+            data-style="btn-info">
+            <option value='gwei'>gwei</option>
+            <option value='finney'>finney</option>
+            <option value='ether'>eth</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-12 wager-cntl-center-contents">
+          <button type="button"
+          id="toss_button"
+          class="btn btn-primary"
+          onclick="tossCoin()">Toss Coin</button>
+        </div>
+      </div>
+    </div>
+    <!-- End Player Section -->
+
+    <!-- Start Administrative section -->
+    <div class="container" id="adminContent">
+
+      <div class="row">
+        <div class="col-sm-10">
+          <label>Balance:</label>
+          <span id="contractBalance"></span>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-10">
+          <label for="loadAmount">Amount</label>
+          <input type="text"
+            class="form-control"
+            id="loadAmount"
+            name="loadAmount"
+            placeholder="amount (eth)"
+            value="1" />
+
+          <button type="button"
+            id="load_amount_button"
+            class="btn btn-primary"
+            onclick="loadGame()">Send</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-10">
+          <label for="withdrawAmount">Amount</label>
+          <input type="text"
+            class="form-control"
+            id="withdrawAmount"
+            name="withdrawAmount"
+            placeholder="amount (eth)" value="1" />
+
+          <button type="button"
+            id="withdraw_button"
+            class="btn btn-primary"
+            onclick="withdraw()">Withdraw</button>
+        </div>
+      </div>
+
+    </div>
+    <script>
+      var wagerChoice = 0;
+
+      $(document).ready(function() {
+        flipitService.init().then (function(result){
+          flipitService.gameStats().then(function(result){
+            var amt = flipitService.web3.utils
+              .fromWei(result.amountPaid, "ether");
+            $("#wagersMadeVal").html(result.wagersMade);
+            $("#wagersWonVal").html(result.wagersWon);
+            $("#totalWagerAmt").html(result.amountWagered);
+            $("#payoutVal").html(amt);
+            $("#multiplierVal").html(result.winMultiplier + 'x');
+
+            return flipitService.web3.eth.getBalance(contractAddress);
+          }).then(function(result) {
+            var bal = flipitService.web3.utils.fromWei(result,"ether");
+            $('#contractBalance').html(bal + ' (eth)');
+
+            return flipitService.isAdmin();
+          }).then(function(result) {
+            if (result) {
+              $('#playerContent').addClass('hidden');
+            }
+            else {
+              $('#adminContent').addClass('hidden');
+              $('#totalWagerAmtRow').addClass('hidden');
+            }
+          });
+        });
+      });
+
+      function checkTossResult () {
+        console.log("checking toss result ...");
+        $('#theCoin').removeClass('flip-fast');
+        $('#coinFront').removeClass('flipped');
+        $('#coinBack').removeClass('flipped');
+
+        if (wagerChoice == 0) {
+          $('#coinBack').addClass('flipped');
+        }
+        else {
+          $('#coinFront').addClass('flipped');
+        }
+
+        flipitService.lastToss().then(function(result){
+
+          if (result.win) {
+
+            alert ('You won ' + flipitService.web3.utils.fromWei(result.payout, "ether") + ' (eth)');
+          }
+          else {
+            alert ('Oh no, bad luck. Try again!');
+          }
+
+          refreshStats();
+        });
+      }
+
+      function loadGame () {
+        var amt = $('#loadAmount').val();
+
+        flipitService.loadGame(amt, function() {
+          flipitService.web3.eth.getBalance(contractAddress)
+            .then(function(result) {
+              $('#contractBalance').val(result);
+            });
+          });
+      }
+
+      function refreshStats() {
+        flipitService.gameStats().then(function(result){
+          var amt = flipitService.web3.utils
+            .fromWei(result.amountPaid, "ether");
+          $("#wagersMadeVal").html(result.wagersMade);
+          $("#wagersWonVal").html(result.wagersWon);
+          $("#payoutVal").html(amt);
+          $("#multiplierVal").html(result.winMultiplier + 'x');
+        });
+      }
+
+      function tossCoin () {
+        wagerChoice = $('#tossCall').val();
+        var amt = $('#wager').val();
+        var dem = $('#wagerDenomination').val();
+
+        $('#theCoin').addClass('flip-fast');
+
+        flipitService.doToss(wagerChoice, amt, dem, checkTossResult);
+      }
+
+      function withdraw () {
+        var amt = $('#withdrawAmount').val();
+
+        flipitService.withdraw(amt, function() {
+          flipitService.web3.eth.getBalance(contractAddress)
+            .then(function(result) {
+              $('#contractBalance').val(result);
+            });
+          });
+      }
+
+    </script>
+  </body>
+</html>
